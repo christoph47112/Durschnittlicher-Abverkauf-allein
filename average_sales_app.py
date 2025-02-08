@@ -22,7 +22,7 @@ st.markdown("""
 """)
 
 # Datei-Uploader
-uploaded_file = st.file_uploader("Bitte laden Sie Ihre Datei hoch (Excel, .xlsx)", type=["xlsx"])
+uploaded_file = st.file_uploader("Bitte laden Sie Ihre Abverkaufsdatei hoch (Excel)", type=["xlsx"])
 
 if uploaded_file:
     # Excel-Datei laden und verarbeiten
@@ -38,7 +38,7 @@ if uploaded_file:
         st.error("Fehler: Die Datei enthält fehlende Werte. Bitte stellen Sie sicher, dass alle Zellen ausgefüllt sind.")
     else:
         # Filter- und Suchmöglichkeiten
-        st.sidebar.title("Filteroptionen")
+        st.sidebar.title("Artikel-Filter")
         artikel_filter = st.sidebar.text_input("Nach Artikelnummer filtern (optional)")
         artikel_name_filter = st.sidebar.text_input("Nach Artikelname filtern (optional)")
 
