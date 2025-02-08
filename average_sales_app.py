@@ -22,7 +22,7 @@ st.markdown("""
 """)
 
 # Datei-Uploader
-uploaded_file = st.file_uploader("Bitte laden Sie Ihre Datei hoch (Excel)", type=["xlsx"])
+uploaded_file = st.file_uploader("Bitte laden Sie Ihre Datei hoch (Excel, .xlsx)", type=["xlsx"])
 
 if uploaded_file:
     # Excel-Datei laden und verarbeiten
@@ -38,7 +38,8 @@ if uploaded_file:
         st.error("Fehler: Die Datei enthält fehlende Werte. Bitte stellen Sie sicher, dass alle Zellen ausgefüllt sind.")
     else:
         # Filter- und Suchmöglichkeiten
-        artikel_filter = st.sidebar.text_input("Nach Artikel filtern (optional)")
+        st.sidebar.title("Filteroptionen")
+        artikel_filter = st.sidebar.text_input("Nach Artikelnummer filtern (optional)")
         artikel_name_filter = st.sidebar.text_input("Nach Artikelname filtern (optional)")
 
         if artikel_filter:
@@ -82,7 +83,7 @@ if uploaded_file:
 
         # Vergleich von Ergebnissen ermöglichen
         if st.checkbox("Vergleiche mit einer anderen Datei anzeigen"):
-            uploaded_file_compare = st.file_uploader("Vergleichsdatei hochladen (Excel)", type=["xlsx"], key="compare")
+            uploaded_file_compare = st.file_uploader("Vergleichsdatei hochladen (Excel, .xlsx)", type=["xlsx"], key="compare")
             if uploaded_file_compare:
                 compare_data = pd.read_excel(uploaded_file_compare)
                 compare_result = compare_data.groupby(['Artikel', 'Name']).agg({'Menge': 'mean'}).reset_index()
@@ -92,3 +93,7 @@ if uploaded_file:
                 st.subheader("Vergleich der beiden Dateien")
                 merged_results = result.merge(compare_result, on='Artikel', suffixes=('_Original', '_Vergleich'))
                 st.dataframe(merged_results)
+
+st.markdown("---")
+st.markdown("⚠️ **Hinweis:** Diese Anwendung speichert keine Daten und hat keinen Zugriff auf Ihre Dateien.")
+st.markdown("🌟 **Erstellt von Christoph R. Kaiser mit Hilfe von Künstlicher Intelligenz.**")
