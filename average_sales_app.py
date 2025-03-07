@@ -19,25 +19,38 @@ st.markdown("""
    - Nutzen Sie das Filterfeld in der Seitenleiste, um nach bestimmten Artikeln zu suchen.
 5. Vergleichen Sie die Ergebnisse (optional):
    - Laden Sie eine zweite Datei hoch, um die Ergebnisse miteinander zu vergleichen.
+6. Falls Ihre Datei nicht das richtige Format hat:
+   - Laden Sie die unverarbeitete Datei hoch, und die App wandelt sie automatisch in das benötigte Format um.
 """)
+
+# Funktion zur Umwandlung der Originaldatei in das benötigte Format
+def convert_original_file(uploaded_file):
+    df_original = pd.read_excel(uploaded_file, sheet_name=0, header=None)
+    df_original.columns = df_original.iloc[1]  # Zweite Zeile als Spaltenüberschriften setzen
+    df_original = df_original[2:]  # Erste zwei Zeilen entfernen
+    df_transformed = df_original[[df_original.columns[0], df_original.columns[1], "Woche", "VerkaufsME | Wochentag", "Gesamtergebnis"]].copy()
+    df_transformed.columns = ["Artikel", "Name", "Woche", "VerkaufsME", "Menge"]
+    df_transformed["Woche"] = pd.to_numeric(df_transformed["Woche"], errors='coerce')
+    df_transformed["Menge"] = pd.to_numeric(df_transformed["Menge"], errors='coerce')
+    return df_transformed
 
 # Datei-Uploader
 uploaded_file = st.file_uploader("Bitte laden Sie Ihre Abverkaufsdatei hoch (Excel)", type=["xlsx"])
 
 if uploaded_file:
-    # Excel-Datei laden und verarbeiten
+    # Prüfen, ob die Datei bereits das richtige Format hat oder umgewandelt werden muss
     data = pd.ExcelFile(uploaded_file)
-    sheet_name = st.sidebar.selectbox("Wählen Sie das Blatt aus", data.sheet_names)  # Blattauswahl ermöglichen
+    sheet_name = st.sidebar.selectbox("Wählen Sie das Blatt aus", data.sheet_names)
     df = data.parse(sheet_name)
-
-    # Erweiterte Datenvalidierung
+    
     required_columns = {"Artikel", "Woche", "Menge", "Name"}
     if not required_columns.issubset(df.columns):
-        st.error("Fehler: Die Datei muss die Spalten 'Artikel', 'Woche', 'Menge' und 'Name' enthalten.")
-    elif df.isnull().values.any():
+        st.warning("Die Datei scheint nicht das richtige Format zu haben. Die App wird sie nun umwandeln.")
+        df = convert_original_file(uploaded_file)
+
+    if df.isnull().values.any():
         st.error("Fehler: Die Datei enthält fehlende Werte. Bitte stellen Sie sicher, dass alle Zellen ausgefüllt sind.")
     else:
-        # Filter- und Suchmöglichkeiten
         st.sidebar.title("Artikel-Filter")
         artikel_filter = st.sidebar.text_input("Nach Artikelnummer filtern (optional)")
         artikel_name_filter = st.sidebar.text_input("Nach Artikelname filtern (optional)")
@@ -48,51 +61,24 @@ if uploaded_file:
         if artikel_name_filter:
             df = df[df['Name'].str.contains(artikel_name_filter, case=False, na=False)]
 
-        # Durchschnittliche Abverkaufsmengen berechnen und Originalreihenfolge beibehalten
         result = df.groupby(['Artikel', 'Name'], sort=False).agg({'Menge': 'mean'}).reset_index()
         result.rename(columns={'Menge': 'Durchschnittliche Menge pro Woche'}, inplace=True)
 
-        # Rundungsoptionen in der Sidebar für alle Artikel
-        round_option = st.sidebar.selectbox(
-            "Rundungsoption für alle Artikel:",
-            ['Nicht runden', 'Aufrunden', 'Abrunden'],
-            index=0
-        )
+        round_option = st.sidebar.selectbox("Rundungsoption für alle Artikel:", ['Nicht runden', 'Aufrunden', 'Abrunden'], index=0)
 
         if round_option == 'Aufrunden':
             result['Durchschnittliche Menge pro Woche'] = result['Durchschnittliche Menge pro Woche'].apply(lambda x: round(x + 0.5))
         elif round_option == 'Abrunden':
             result['Durchschnittliche Menge pro Woche'] = result['Durchschnittliche Menge pro Woche'].apply(lambda x: round(x - 0.5))
 
-        # Ergebnisse anzeigen
         st.subheader("Ergebnisse")
         st.dataframe(result)
-
-        # Fortschrittsanzeige
         st.info("Verarbeitung abgeschlossen. Die Ergebnisse stehen zur Verfügung.")
 
-        # Ergebnisse herunterladen
         output = BytesIO()
         result.to_excel(output, index=False, engine='openpyxl')
         output.seek(0)
-        st.download_button(
-            label="Ergebnisse herunterladen",
-            data=output,
-            file_name="durchschnittliche_abverkaeufe.xlsx"
-        )
-
-        # Vergleich von Ergebnissen ermöglichen
-        if st.checkbox("Vergleiche mit einer anderen Datei anzeigen"):
-            uploaded_file_compare = st.file_uploader("Vergleichsdatei hochladen (Excel, .xlsx)", type=["xlsx"], key="compare")
-            if uploaded_file_compare:
-                compare_data = pd.read_excel(uploaded_file_compare)
-                compare_result = compare_data.groupby(['Artikel', 'Name']).agg({'Menge': 'mean'}).reset_index()
-                compare_result.rename(columns={'Menge': 'Durchschnittliche Menge pro Woche'}, inplace=True)
-
-                # Ergebnisse der beiden Dateien nebeneinander anzeigen
-                st.subheader("Vergleich der beiden Dateien")
-                merged_results = result.merge(compare_result, on='Artikel', suffixes=('_Original', '_Vergleich'))
-                st.dataframe(merged_results)
+        st.download_button(label="Ergebnisse herunterladen", data=output, file_name="durchschnittliche_abverkaeufe.xlsx")
 
 st.markdown("---")
 st.markdown("⚠️ **Hinweis:** Diese Anwendung speichert keine Daten und hat keinen Zugriff auf Ihre Dateien.")
