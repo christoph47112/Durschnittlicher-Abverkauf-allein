@@ -6,23 +6,6 @@ st.set_page_config(page_title="Durchschnittliche Abverkaufsmengen", layout="wide
 
 st.title("Berechnung der Ø Abverkaufsmengen pro Woche von Werbeartikeln zu Normalpreisen")
 
-st.markdown("""
-### Anleitung zur Nutzung dieser App
-1. Bereiten Sie Ihre Abverkaufsdaten vor:
-   - Die Datei muss die Spalten **'Artikel', 'Woche', 'Menge' (in Stück) und 'Name'** enthalten.
-   - Speichern Sie die Datei im Excel-Format.
-2. Laden Sie Ihre Datei hoch:
-   - Nutzen Sie die Schaltfläche **„Durchsuchen“**, um Ihre Datei auszuwählen.
-3. Überprüfen Sie die berechneten Ergebnisse:
-   - Die App zeigt die durchschnittlichen Abverkaufsmengen pro Woche an.
-4. Filtern und suchen Sie die Ergebnisse (optional):
-   - Nutzen Sie das Filterfeld in der Seitenleiste, um nach bestimmten Artikeln zu suchen.
-5. Vergleichen Sie die Ergebnisse (optional):
-   - Laden Sie eine zweite Datei hoch, um die Ergebnisse miteinander zu vergleichen.
-6. Falls Ihre Datei nicht das richtige Format hat:
-   - Laden Sie die unverarbeitete Datei hoch, und die App wandelt sie automatisch in das benötigte Format um.
-""")
-
 # Funktion zur Umwandlung der Originaldatei in das benötigte Format
 def convert_original_file(uploaded_file):
     df_original = pd.read_excel(uploaded_file, sheet_name=0, header=None)
