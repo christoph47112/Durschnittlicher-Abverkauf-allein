@@ -38,7 +38,6 @@ def convert_original_file(uploaded_file):
 uploaded_file = st.file_uploader("Bitte laden Sie Ihre Abverkaufsdatei hoch (Excel)", type=["xlsx"])
 
 if uploaded_file:
-    # Prüfen, ob die Datei bereits das richtige Format hat oder umgewandelt werden muss
     data = pd.ExcelFile(uploaded_file)
     sheet_name = st.sidebar.selectbox("Wählen Sie das Blatt aus", data.sheet_names)
     df = data.parse(sheet_name)
@@ -64,12 +63,14 @@ if uploaded_file:
         result = df.groupby(['Artikel', 'Name'], sort=False).agg({'Menge': 'mean'}).reset_index()
         result.rename(columns={'Menge': 'Durchschnittliche Menge pro Woche'}, inplace=True)
 
-        round_option = st.sidebar.selectbox("Rundungsoption für alle Artikel:", ['Nicht runden', 'Aufrunden', 'Abrunden'], index=0)
+        round_option = st.sidebar.selectbox("Rundungsoption für alle Artikel:", ['Nicht runden', 'Aufrunden', 'Abrunden', 'Kaufmännisch runden'], index=0)
 
         if round_option == 'Aufrunden':
             result['Durchschnittliche Menge pro Woche'] = result['Durchschnittliche Menge pro Woche'].apply(lambda x: round(x + 0.5))
         elif round_option == 'Abrunden':
             result['Durchschnittliche Menge pro Woche'] = result['Durchschnittliche Menge pro Woche'].apply(lambda x: round(x - 0.5))
+        elif round_option == 'Kaufmännisch runden':
+            result['Durchschnittliche Menge pro Woche'] = result['Durchschnittliche Menge pro Woche'].apply(lambda x: round(x))
 
         st.subheader("Ergebnisse")
         st.dataframe(result)
